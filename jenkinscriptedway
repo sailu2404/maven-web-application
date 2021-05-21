@@ -1,0 +1,40 @@
+node
+{
+    def mavenHome = tool name: "Maven3.6.3"
+    properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5'))])
+    stage('gettingcodefromgit')
+    {
+    git branch: 'development', credentialsId: '3216091c-fc3e-4696-b3bb-37cf80817e3c', url: 'https://github.com/Lakshmidurga24/maven-web-application.git'
+    }  
+    
+    stage('build')
+    {
+     sh "${mavenHome}/bin/mvn clean package"
+    }
+    /*
+    stage('ExcuteSonarQubeReport')
+    {
+     sh "${mavenHome}/bin/mvn clean sonar:sonar"
+    }
+    
+     stage('UploadArtifactsIntoNexus')
+    {
+     sh "${mavenHome}/bin/mvn deploy"
+    }
+    
+     stage('DeployAppIntoTomcatServer')
+    {
+     sshagent(['dbbba776-04be-40a5-89f6-1bc417de8d27'])
+     {
+      sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.127.137.86:/opt/apache-tomcat-9.0.45/webapps"
+     }
+    }
+    */
+    
+    stage('sendingEmail')
+    {
+    emailext body: 'hello', subject: 'build sucess', to: 'lakshmi240492@gmail.com'
+    }
+    
+    
+}
