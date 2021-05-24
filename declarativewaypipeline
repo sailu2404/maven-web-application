@@ -1,0 +1,73 @@
+pipeline
+{
+agent any
+/*triggers
+{
+    cron('* * * * *')
+}*/
+options
+{
+   
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5'))
+    timestamps()
+}
+tools
+{
+    maven 'Maven3.6.3'
+}
+    
+    stages
+      {
+        stage('checkoutcode')
+        {
+            steps
+            {
+                git branch: 'development', credentialsId: '3216091c-fc3e-4696-b3bb-37cf80817e3c', url: 'https://github.com/Lakshmidurga24/maven-web-application.git'
+            }
+        }
+        
+        stage('build')
+        {
+            steps
+            {
+                sh "mvn clean package"
+            }
+        }
+        stage('SonarQubeReport')
+        {
+            steps
+            {
+                sh "mvn clean sonar:sonar"
+            }
+        }
+        stage('ArtifactsIntoNexus')
+        {
+            steps
+            {
+                sh "mvn deploy"
+            }
+        }
+        stage('UploadingAppintoTomcatServer')
+        {
+            steps
+            {
+                 sshagent(['dbbba776-04be-40a5-89f6-1bc417de8d27'])
+                 {
+      sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.127.137.86:/opt/apache-tomcat-9.0.45/webapps"
+                 }
+            }
+        }
+      }
+      post
+      {
+          success
+          {
+              emailext body: 'build success', subject: 'sucess', to: 'lakshmi240492@gmail.com'
+          }
+          failure
+          {
+              emailext body: 'build faill', subject: 'fail', to: 'lakshmi240492@gmail.com'
+          }
+      }
+    
+}
